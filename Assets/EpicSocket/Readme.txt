@@ -1,0 +1,1 @@
+See full readme here https://github.com/MirageNet/EpicSocket
