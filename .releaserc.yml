@@ -1,0 +1,29 @@
+branches: 
+  - "main"
+  - name: "beta"
+    channel: "beta"
+    prerelease: true
+plugins:
+  - '@semantic-release/github'
+  - '@semantic-release/release-notes-generator'
+  - '@semantic-release/commit-analyzer'
+  - - '@semantic-release/changelog'
+    - changelogFile: 'Assets/EpicSocket/CHANGELOG.md'
+  - - '@semantic-release/npm'
+    - npmPublish: false
+      pkgRoot: "Assets/EpicSocket"
+  # run prepareCmd after other steps so that changes are included in package
+  - - '@semantic-release/exec'
+    # See .release.sh for what files are included in release
+    - prepareCmd: "sh ./.release.sh ${nextRelease.version}"
+  - - '@semantic-release/git'
+    - assets:
+        - 'Assets/EpicSocket/Runtime/AssemblyInfo.cs'
+        - 'Assets/EpicSocket/package.json'
+        - 'Assets/EpicSocket/CHANGELOG.md'
+publish:
+  - path: "@semantic-release/github" 
+    assets: 
+      - path: "Mirage.EpicSocket.unitypackage"
+        label: "Mirage.EpicSocket ${nextRelease.version} Unity Package"
+        name: "Mirage.EpicSocket-${nextRelease.version}.unitypackage"
