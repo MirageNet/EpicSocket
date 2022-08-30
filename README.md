@@ -15,6 +15,7 @@ If you are using unity 2019.3 or later:
 2) Install [Mirage](https://github.com/MirageNet/Mirage)
 3) Click on Windows -> Package Manager
 4) Add `com.playeveryware.eos` as to `scopedRegistries`
+    * **Important:** currently eos must be installed manually by adding `https://github.com/PlayEveryWare/eos_plugin_for_unity_upm.git#v1.0.4`
 5) Add the `com.miragenet.epicsocket` package`
 
 ### Required Scoped Registers
