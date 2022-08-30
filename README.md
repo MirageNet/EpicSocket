@@ -15,7 +15,7 @@ If you are using unity 2019.3 or later:
 2) Install [Mirage](https://github.com/MirageNet/Mirage)
 3) Click on Windows -> Package Manager
 4) Click on the plus sign on the left and click on "Add package from git URL..."
-5) enter https://github.com/MirageNet/EpicOnlineTransport.git?path=/Assets/EpicSocket#v1.0.0-beta.1",
+5) enter `https://github.com/MirageNet/EpicSocket.git?path=/Assets/EpicSocket#v1.0.0-beta.1`,
     - note `#v1.0.0-beta.1` can be replaced with branch, tag or commit hash. eg `#master`
 
 #### Troubleshooting
