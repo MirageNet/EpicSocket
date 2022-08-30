@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "com.miragenet.mirage": "120.0.0",
-    "com.playeveryware.eos": "https://github.com/PlayEveryWare/eos_plugin_for_unity_upm.git#v1.0.4"
+    "com.playeveryware.eos": "1.0.4"
   },
   "samples": []
 }
