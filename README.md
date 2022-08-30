@@ -14,14 +14,31 @@ If you are using unity 2019.3 or later:
 1) Open your project in unity
 2) Install [Mirage](https://github.com/MirageNet/Mirage)
 3) Click on Windows -> Package Manager
-4) Click on the plus sign on the left and click on "Add package from git URL..."
-5) enter `https://github.com/MirageNet/EpicSocket.git?path=/Assets/EpicSocket#v1.0.0-beta.1`,
-    - note `#v1.0.0-beta.1` can be replaced with branch, tag or commit hash. eg `#master`
+4) Add `com.playeveryware.eos` as to `scopedRegistries`
+5) Add the `com.miragenet.epicsocket` package`
 
-#### Troubleshooting
-If there are errors installing you may neeed to manually add the EOS plugin first:
+### Required Scoped Registers
+
+This repo requires the following Scopes registers, These values can be set in project settings within the editor or by adding them to `manifest.json`
+```json
+"scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.cysharp.unitask",
+        "com.openupm",
+        "com.miragenet",
+        "com.playeveryware.eos"
+      ]
+    }
 ```
-https://github.com/PlayEveryWare/eos_plugin_for_unity_upm.git#v1.0.4
+
+### Git install
+
+Alternatively to OpenUPM you can install using git url by adding this to `manifest.json`
+```json
+"com.miragenet.epicsocket": "https://github.com/MirageNet/EpicSocket.git?path=/Assets/EpicSocket#v1.0.0-beta.1"
 ```
 
 
