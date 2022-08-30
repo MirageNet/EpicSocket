@@ -18,6 +18,12 @@ If you are using unity 2019.3 or later:
 5) enter https://github.com/MirageNet/EpicOnlineTransport.git?path=/Assets/EpicSocket#v1.0.0-beta.1",
     - note `#v1.0.0-beta.1` can be replaced with branch, tag or commit hash. eg `#master`
 
+#### Troubleshooting
+If there are errors installing you may neeed to manually add the EOS plugin first:
+```
+https://github.com/PlayEveryWare/eos_plugin_for_unity_upm.git#v1.0.4
+```
+
 
 ## Epic setup
 
