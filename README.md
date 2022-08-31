@@ -77,7 +77,7 @@ public static async UniTask<LobbyDetails> GetFirstLobby(EpicSocketFactory epicFa
     return lobbies.First();
 }
 
-public static async UniTask LobbyDetails(NetworkManager manager, EpicSocketFactory epicFactory, LobbyDetails lobby)
+public static async UniTask ConnectToLobby(NetworkManager manager, EpicSocketFactory epicFactory, LobbyDetails lobby)
 {
     var remoteUser = lobby.GetLobbyOwner(new LobbyDetailsGetLobbyOwnerOptions());
 
