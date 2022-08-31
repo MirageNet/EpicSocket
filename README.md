@@ -46,3 +46,41 @@ Alternatively to OpenUPM you can install using git url by adding this to `manife
 ## Epic setup
 
 Check [eos_plugin_for_unity](https://github.com/PlayEveryWare/eos_plugin_for_unity) for Epic setup and examples
+
+
+## Basic usage
+
+When using `EpicSocketFactory` with Mirage you should start the client/server via the `EpicSocketFactory` instead of by themselves. 
+This is because the SocketFactory will make a connection to the relay first and then start the client/server when the relay is ready to use (this avoids timeout issues).
+
+
+```cs
+public static async UniTask HostWithEpic(NetworkManager manager, EpicSocketFactory epicFactory)
+{
+    await epicFactory.InitializeAsync();
+
+    var lobbyHelper = new LobbyHelper(EOSManager.Instance.GetProductUserId(), EOSManager.Instance.GetEOSLobbyInterface());
+
+    epicFactory.StartAsHost(manager.Server, manager.Client);
+    await lobbyHelper.StartLobby(4, "Default");
+}
+
+
+public static async UniTask<LobbyDetails> GetFirstLobby(EpicSocketFactory epicFactory)
+{
+    await epicFactory.InitializeAsync();
+
+    var lobbyHelper = new LobbyHelper(EOSManager.Instance.GetProductUserId(), EOSManager.Instance.GetEOSLobbyInterface());
+    var lobbies = await lobbyHelper.GetAllLobbies();
+
+    // most of the time you will want to have the user pick the lobby, but for this example we just pick the first
+    return lobbies.First();
+}
+
+public static async UniTask LobbyDetails(NetworkManager manager, EpicSocketFactory epicFactory, LobbyDetails lobby)
+{
+    var remoteUser = lobby.GetLobbyOwner(new LobbyDetailsGetLobbyOwnerOptions());
+
+    await epicFactory.StartAsClient(manager.Client, remoteUser);
+}
+```
