@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
@@ -19,7 +21,7 @@ namespace Mirage.Sockets.EpicSocket
             _lobby = lobby;
         }
 
-        public UniTask StartLobby(int maxMembers, string bucketId = "Default")
+        public UniTask<string> StartLobby(int maxMembers, string bucketId = "Default")
         {
             var options = new CreateLobbyOptions
             {
@@ -32,9 +34,11 @@ namespace Mirage.Sockets.EpicSocket
                 EnableRTCRoom = false,
                 BucketId = bucketId,
             };
+
             return StartLobby(options);
         }
-        public async UniTask StartLobby(CreateLobbyOptions options)
+
+        public async UniTask<string> StartLobby(CreateLobbyOptions options)
         {
             var awaiter = new AsyncWaiter<CreateLobbyCallbackInfo>();
             _lobby.CreateLobby(options, null, awaiter.Callback);
@@ -43,20 +47,44 @@ namespace Mirage.Sockets.EpicSocket
             if (logger.LogEnabled()) logger.Log($"Lobby Created, ID:{result.LobbyId}");
 
             if (result.ResultCode != Result.Success)
-                return;
+                throw new EpicLobbyException("Failed to create lobby", result);
 
-            await ModifyLobby(result.LobbyId);
+            return result.LobbyId;
         }
-        public async UniTask ModifyLobby(string lobbyId)
+
+
+        public async UniTask LeaveLobby(string lobbyId)
         {
+            var options = new LeaveLobbyOptions
+            {
+                LobbyId = lobbyId,
+                LocalUserId = _localUser
+            };
+            var awaiter = new AsyncWaiter<LeaveLobbyCallbackInfo>();
+            _lobby.LeaveLobby(options, null, awaiter.Callback);
+            var result = await awaiter.Wait();
+            logger.WarnResult("Create Lobby", result.ResultCode);
+        }
+
+        public UniTask ModifyLobby(string lobbyId, AttributeData modifyData)
+        {
+            return ModifyLobby(lobbyId, new List<AttributeData>() { modifyData });
+        }
+        public async UniTask ModifyLobby(string lobbyId, IEnumerable<AttributeData> modifyData)
+        {
+            if (modifyData.Count() == 0)
+                throw new ArgumentException("collectioon was empty", nameof(modifyData));
+
             _lobby.UpdateLobbyModification(new UpdateLobbyModificationOptions { LobbyId = lobbyId, LocalUserId = _localUser }, out var modifyHandle);
 
-            var data = CreateMapAttribute();
-            modifyHandle.AddAttribute(new LobbyModificationAddAttributeOptions
+            foreach (var data in modifyData)
             {
-                Attribute = data,
-                Visibility = LobbyAttributeVisibility.Public
-            });
+                modifyHandle.AddAttribute(new LobbyModificationAddAttributeOptions
+                {
+                    Attribute = data,
+                    Visibility = LobbyAttributeVisibility.Public
+                });
+            }
 
             var awaiter = new AsyncWaiter<UpdateLobbyCallbackInfo>();
             _lobby.UpdateLobby(new UpdateLobbyOptions { LobbyModificationHandle = modifyHandle }, null, awaiter.Callback);
@@ -65,35 +93,38 @@ namespace Mirage.Sockets.EpicSocket
             if (logger.LogEnabled()) logger.Log($"Lobby Modified, ID:{result.LobbyId}");
         }
 
-        private static AttributeData CreateMapAttribute()
+        public static AttributeData CreateData(string key, string value)
         {
             var data = new AttributeData();
-            data.Key = "map";
+            data.Key = key;
             data.Value = new AttributeDataValue();
-            data.Value.AsUtf8 = "test";
+            data.Value.AsUtf8 = value;
             return data;
         }
 
-        public async UniTask<List<LobbyDetails>> GetAllLobbies(uint maxResults = 10)
+        public UniTask<List<LobbyDetails>> GetAllLobbies(LobbySearchSetParameterOptions searchOption, uint maxResults = 10)
+        {
+            return GetAllLobbies(new List<LobbySearchSetParameterOptions>() { searchOption }, maxResults);
+        }
+        public async UniTask<List<LobbyDetails>> GetAllLobbies(IEnumerable<LobbySearchSetParameterOptions> searchOptions, uint maxResults = 10)
         {
             logger.WarnResult("Create Search", _lobby.CreateLobbySearch(new CreateLobbySearchOptions { MaxResults = maxResults, }, out var searchHandle));
 
-            var awaiter = new AsyncWaiter<LobbySearchFindCallbackInfo>();
-
-            var paramOptions = new LobbySearchSetParameterOptions
+            foreach (var option in searchOptions)
             {
-                ComparisonOp = ComparisonOp.Equal,
-                Parameter = CreateMapAttribute()
-            };
+                searchHandle.SetParameter(option);
+            }
 
-            searchHandle.SetParameter(paramOptions);
+            var awaiter = new AsyncWaiter<LobbySearchFindCallbackInfo>();
             searchHandle.Find(new LobbySearchFindOptions { LocalUserId = _localUser, }, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Search Find", result.ResultCode);
 
             var getOption = new LobbySearchCopySearchResultByIndexOptions();
             var lobbyDetails = new List<LobbyDetails>();
-            for (var i = 0; i < maxResults; i++)
+
+            var resultCount = searchHandle.GetSearchResultCount(new LobbySearchGetSearchResultCountOptions());
+            for (var i = 0; i < resultCount; i++)
             {
                 getOption.LobbyIndex = (uint)i;
                 var getResult = searchHandle.CopySearchResultByIndex(getOption, out var lobbyDetail);
@@ -110,6 +141,17 @@ namespace Mirage.Sockets.EpicSocket
             searchHandle.Release();
 
             return lobbyDetails;
+        }
+    }
+
+
+    public class EpicLobbyException : EpicSocketException
+    {
+        public readonly CreateLobbyCallbackInfo Result;
+
+        public EpicLobbyException(string message, CreateLobbyCallbackInfo result) : base(message)
+        {
+            Result = result;
         }
     }
 }
