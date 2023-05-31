@@ -10,7 +10,7 @@ namespace Mirage.Sockets.EpicSocket
     internal struct ReceivedPacket
     {
         public ProductUserId userId;
-        public byte[] data;
+        public ArraySegment<byte> data;
     }
 
     internal class RelayHandle
@@ -29,6 +29,7 @@ namespace Mirage.Sockets.EpicSocket
         private SendPacketOptions _sendOptions;
         private ReceivePacketOptions _receiveOptions;
         private byte[] _singleByteCommand = new byte[1];
+        private byte[] _receiveBuffer = new byte[P2PInterface.MaxPacketSize];
 
         public bool IsOpen { get; private set; }
         /// <summary>Host user</summary>
@@ -87,7 +88,7 @@ namespace Mirage.Sockets.EpicSocket
             _remoteUser = remoteUser ?? throw new ArgumentNullException(nameof(remoteUser));
         }
 
-        private void connectionRequestCallback(OnIncomingConnectionRequestInfo data)
+        private void connectionRequestCallback(ref OnIncomingConnectionRequestInfo data)
         {
             var validHost = checkRemoteUser(data.RemoteUserId);
             if (!validHost)
@@ -103,7 +104,7 @@ namespace Mirage.Sockets.EpicSocket
                 // todo do we need to need to create new here
                 SocketId = createSocketId()
             };
-            var result = P2P.AcceptConnection(options);
+            var result = P2P.AcceptConnection(ref options);
             EpicLogger.logger.WarnResult("Accept Connection", result);
         }
 
@@ -117,7 +118,7 @@ namespace Mirage.Sockets.EpicSocket
             return _remoteUser == remoteUser;
         }
 
-        private void connectionClosedCallback(OnRemoteConnectionClosedInfo data)
+        private void connectionClosedCallback(ref OnRemoteConnectionClosedInfo data)
         {
             // if we have set remoteUser, then close is probably from them, so we want to close the socket
             if (_remoteUser != null)
@@ -139,21 +140,30 @@ namespace Mirage.Sockets.EpicSocket
             //EpicHelper.WarnResult("SetPacketQueueSize", p2p.SetPacketQueueSize(new SetPacketQueueSizeOptions { IncomingPacketQueueMaxSizeBytes = 64000, OutgoingPacketQueueMaxSizeBytes = 64000 }));
             //EpicHelper.WarnResult("SetRelayControl", p2p.SetRelayControl(new SetRelayControlOptions { RelayControl = RelayControl.ForceRelays }));
 
-            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionRequest(new AddNotifyPeerConnectionRequestOptions { LocalUserId = LocalUser, }, null, (info) =>
+            var requestOption = new AddNotifyPeerConnectionRequestOptions { LocalUserId = LocalUser, };
+            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionRequest(ref requestOption, null, (ref OnIncomingConnectionRequestInfo info) =>
             {
                 EpicLogger.Verbose($"Connection Request [User:{info.RemoteUserId} Socket:{info.SocketId}]");
-                openCallback.Invoke(info);
+                openCallback.Invoke(ref info);
             }));
-            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionEstablished(new AddNotifyPeerConnectionEstablishedOptions { LocalUserId = LocalUser, }, null, (info) =>
+
+            var establishedOptions = new AddNotifyPeerConnectionEstablishedOptions { LocalUserId = LocalUser, };
+            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionEstablished(ref establishedOptions, null, (ref OnPeerConnectionEstablishedInfo info) =>
             {
                 EpicLogger.Verbose($"Connection Established: [User:{info.RemoteUserId} Socket:{info.SocketId} Type:{info.ConnectionType}]");
             }));
-            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionClosed(new AddNotifyPeerConnectionClosedOptions { LocalUserId = LocalUser, }, null, (info) =>
-             {
-                 EpicLogger.Verbose($"Connection Closed [User:{info.RemoteUserId} Socket:{info.SocketId} Reason:{info.Reason}]");
-                 closedCallback.Invoke(info);
-             }));
-            AddHandle(ref _openId, P2P.AddNotifyIncomingPacketQueueFull(new AddNotifyIncomingPacketQueueFullOptions { }, null, (info) =>
+
+
+            var closedOptions = new AddNotifyPeerConnectionClosedOptions { LocalUserId = LocalUser, };
+            AddHandle(ref _openId, P2P.AddNotifyPeerConnectionClosed(ref closedOptions, null, (ref OnRemoteConnectionClosedInfo info) =>
+            {
+                EpicLogger.Verbose($"Connection Closed [User:{info.RemoteUserId} Socket:{info.SocketId} Reason:{info.Reason}]");
+                closedCallback.Invoke(ref info);
+            }));
+
+
+            var queueFullOptions = new AddNotifyIncomingPacketQueueFullOptions { };
+            AddHandle(ref _openId, P2P.AddNotifyIncomingPacketQueueFull(ref queueFullOptions, null, (ref OnIncomingPacketQueueFullInfo info) =>
             {
                 EpicLogger.Verbose($"Incoming Packet Queue Full");
             }));
@@ -255,7 +265,7 @@ namespace Mirage.Sockets.EpicSocket
                 Assert.AreEqual(_remoteUser, _sendOptions.RemoteUserId);
             }
 
-            var result = P2P.SendPacket(_sendOptions);
+            var result = P2P.SendPacket(ref _sendOptions);
             EpicLogger.logger.WarnResult("Send Packet", result);
         }
 
@@ -273,7 +283,7 @@ namespace Mirage.Sockets.EpicSocket
 
         private bool receiveUsingOptions(out ReceivedPacket receivedPacket)
         {
-            var result = P2P.ReceivePacket(_receiveOptions, out var userID, out var _, out var _, out var data);
+            var result = P2P.ReceivePacket(ref _receiveOptions, out var userID, out var socketId, out var outChannel, new ArraySegment<byte>(_receiveBuffer), out var outBytesWritten);
 
             if (result != Result.Success && result != Result.NotFound) // log for results other than Success/NotFound
                 EpicLogger.logger.WarnResult("Receive Packet", result);
@@ -282,7 +292,7 @@ namespace Mirage.Sockets.EpicSocket
             {
                 receivedPacket = new ReceivedPacket
                 {
-                    data = data,
+                    data = new ArraySegment<byte>(_receiveBuffer, 0, (int)outBytesWritten),
                     userId = userID,
                 };
                 return true;

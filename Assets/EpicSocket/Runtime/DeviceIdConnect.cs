@@ -46,7 +46,7 @@ namespace Mirage.Sockets.EpicSocket
 #endif
             };
             var waiter = new AsyncWaiter<CreateDeviceIdCallbackInfo>();
-            connect.CreateDeviceId(createOptions, null, waiter.Callback);
+            connect.CreateDeviceId(ref createOptions, null, waiter.Callback);
             return waiter.Wait();
         }
 

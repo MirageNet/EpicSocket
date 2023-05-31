@@ -54,7 +54,7 @@ namespace Mirage.Sockets.EpicSocket
         /// <returns></returns>
         public UniTask InitializeAsync(string displayName = null)
         {
-            return InitializeAsync((UseDevAuth ? DevAuth : default(Nullable<DevAuthSettings>)), displayName);
+            return InitializeAsync(UseDevAuth ? DevAuth : default(Nullable<DevAuthSettings>), displayName);
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace Mirage.Sockets.EpicSocket
             var setRelayControlOptions = new SetRelayControlOptions();
             setRelayControlOptions.RelayControl = RelayControl.AllowRelays;
 
-            var result = EOSManager.Instance.GetEOSP2PInterface().SetRelayControl(setRelayControlOptions);
+            var result = EOSManager.Instance.GetEOSP2PInterface().SetRelayControl(ref setRelayControlOptions);
             EpicLogger.logger.WarnResult("Set Relay Controls", result);
         }
 

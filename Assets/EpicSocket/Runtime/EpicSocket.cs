@@ -83,11 +83,11 @@ namespace Mirage.Sockets.EpicSocket
         {
             Debug.Assert(_nextPacket.data != null);
 
-            Buffer.BlockCopy(_nextPacket.data, 0, buffer, 0, _nextPacket.data.Length);
+            Buffer.BlockCopy(_nextPacket.data.Array, 0, buffer, 0, _nextPacket.data.Count);
 
             _receiveEndPoint.UserId = _nextPacket.userId;
             endPoint = _receiveEndPoint;
-            var length = _nextPacket.data.Length;
+            var length = _nextPacket.data.Count;
 
             EpicLogger.Verbose($"Receive {length} bytes from {_nextPacket.userId}");
 
