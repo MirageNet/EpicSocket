@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Connect;
 using PlayEveryWare.EpicOnlineServices;
+using UnityEngine;
 
 namespace Mirage.Sockets.EpicSocket
 {
@@ -9,21 +11,30 @@ namespace Mirage.Sockets.EpicSocket
     {
         public static async UniTask Connect(EOSManager.EOSSingleton manager, ConnectInterface connectInterface, string displayName)
         {
-            var createInfo = await CreateDeviceIdAsync(connectInterface);
-
-            ThrowIfResultInvalid(createInfo);
+            await CreateDeviceIdAsync(connectInterface);
 
             var loginInfo = await LoginAsync(manager, displayName);
 
             EpicLogger.logger.WarnResult("Login Callback", loginInfo.ResultCode);
         }
 
-        private static void ThrowIfResultInvalid(CreateDeviceIdCallbackInfo createInfo)
+        private static async UniTask CreateDeviceIdAsync(ConnectInterface connect)
         {
+            var createOptions = new CreateDeviceIdOptions()
+            {
+#if UNITY_EDITOR
+                DeviceModel = SystemInfo.deviceModel + "_Editor"
+#else
+                DeviceModel = SystemInfo.deviceModel
+#endif
+            };
+            var waiter = new AsyncWaiter<CreateDeviceIdCallbackInfo>();
+            connect.CreateDeviceId(ref createOptions, null, waiter.Callback);
+            var createInfo = await waiter.Wait();
+
             if (createInfo.ResultCode == Result.Success)
                 return;
 
-            // already exists, this is ok
             if (createInfo.ResultCode == Result.DuplicateNotAllowed)
             {
                 EpicLogger.logger.Log($"Device Id already exists");
@@ -32,22 +43,6 @@ namespace Mirage.Sockets.EpicSocket
 
             if (createInfo.ResultCode != Result.Success && createInfo.ResultCode != Result.DuplicateNotAllowed)
                 throw new EpicSocketException($"Failed to Create DeviceId, Result code: {createInfo.ResultCode}");
-        }
-
-        private static UniTask<CreateDeviceIdCallbackInfo> CreateDeviceIdAsync(ConnectInterface connect)
-        {
-            var createOptions = new CreateDeviceIdOptions()
-            {
-                // todo get device model
-#if UNITY_EDITOR
-                DeviceModel = "DemoModel_Editor"
-#else
-                DeviceModel = "DemoModel"
-#endif
-            };
-            var waiter = new AsyncWaiter<CreateDeviceIdCallbackInfo>();
-            connect.CreateDeviceId(ref createOptions, null, waiter.Callback);
-            return waiter.Wait();
         }
 
         private static UniTask<LoginCallbackInfo> LoginAsync(EOSManager.EOSSingleton manager, string displayName)

@@ -38,6 +38,7 @@ namespace Mirage.Sockets.EpicSocket
             return StartLobby(options);
         }
 
+        /// <returns>Lobby id</returns>
         public async UniTask<string> StartLobby(CreateLobbyOptions options)
         {
             var awaiter = new AsyncWaiter<CreateLobbyCallbackInfo>();
@@ -51,8 +52,6 @@ namespace Mirage.Sockets.EpicSocket
 
             return result.LobbyId;
         }
-
-
         public async UniTask LeaveLobby(string lobbyId)
         {
             var options = new LeaveLobbyOptions

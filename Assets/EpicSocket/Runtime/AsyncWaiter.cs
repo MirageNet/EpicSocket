@@ -12,18 +12,21 @@ namespace Mirage.Sockets.EpicSocket
     public class AsyncWaiter<T>
     {
         private T _result;
+        private bool _received;
 
         public void Callback(ref T result)
         {
             _result = result;
+            _received = true;
         }
         public void Callback(T result)
         {
             _result = result;
+            _received = true;
         }
         public async UniTask<T> Wait()
         {
-            while (_result == null)
+            while (!_received)
             {
                 await UniTask.Yield();
             }

@@ -42,8 +42,8 @@ namespace Mirage.Sockets.EpicSocket
 
         public void Close()
         {
-            _relayHandle.CloseRelay();
-            _relayHandle = default;
+            _relayHandle?.CloseRelay();
+            _relayHandle = null;
             _isClosed = true;
         }
 
