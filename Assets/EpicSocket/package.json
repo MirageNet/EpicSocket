@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "com.miragenet.mirage": "120.0.0",
-    "com.playeveryware.eos": "2.3.0"
+    "com.playeveryware.eos": "2.2.0"
   },
   "samples": []
 }
