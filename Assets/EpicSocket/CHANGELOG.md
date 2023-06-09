@@ -1,3 +1,11 @@
+# [1.0.0-beta.4](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-06-09)
+
+
+### Bug Fixes
+
+* downgrading eos package to v2.2.0 ([fcb22fb](https://github.com/MirageNet/EpicSocket/commit/fcb22fbf3a8c9ae2f50a9efc5eb7e1d51da0e3cb))
+* fixing scripts for eos v2 ([0a9d3c4](https://github.com/MirageNet/EpicSocket/commit/0a9d3c41a6e35a968d95b9eeb5c94a785ab91e9d))
+
 # [1.0.0-beta.3](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2023-01-24)
 
 

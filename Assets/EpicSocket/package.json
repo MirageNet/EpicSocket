@@ -1,7 +1,7 @@
 {
   "name": "com.miragenet.epicsocket",
   "displayName": "Epic Socket for Mirage",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "unity": "2019.4",
   "description": "Epic online servers for Mirage, includes relay, lobbies and other features",
   "author": "Mirage",
