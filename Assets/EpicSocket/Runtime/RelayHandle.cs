@@ -32,7 +32,7 @@ namespace Mirage.Sockets.EpicSocket
         private byte[] _receiveBuffer = new byte[P2PInterface.MaxPacketSize];
 
         public bool IsOpen { get; private set; }
-        /// <summary>Host user</summary>
+        /// <summary>User that is hosting relay</summary>
         public ProductUserId RemoteUser => _remoteUser;
 
         private static RelayHandle s_instance;

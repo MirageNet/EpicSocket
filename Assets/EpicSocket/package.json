@@ -10,7 +10,7 @@
     "url": "https://github.com/MirageNet/EpicSocket.git"
   },
   "dependencies": {
-    "com.miragenet.mirage": "120.0.0",
+    "com.miragenet.mirage": "143.0.0",
     "com.playeveryware.eos": "2.2.0"
   },
   "samples": []
