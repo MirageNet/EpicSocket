@@ -1,3 +1,15 @@
+# [1.0.0-beta.5](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-06-18)
+
+
+### Features
+
+* adding EpicNetworkAuthenticator that will authenticate using the product Id ([9b97d76](https://github.com/MirageNet/EpicSocket/commit/9b97d76307ec05facb38b732593748c0eb534095))
+
+
+### BREAKING CHANGES
+
+* now requires mirage v143
+
 # [1.0.0-beta.4](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-06-09)
 
 
