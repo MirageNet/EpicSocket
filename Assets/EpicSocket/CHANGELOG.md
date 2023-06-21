@@ -1,3 +1,10 @@
+# [1.0.0-beta.6](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-06-21)
+
+
+### Bug Fixes
+
+* fixing auth script ([db713fb](https://github.com/MirageNet/EpicSocket/commit/db713fb58dd64ffc51021581ca7aacf012c99abc))
+
 # [1.0.0-beta.5](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-06-18)
 
 
