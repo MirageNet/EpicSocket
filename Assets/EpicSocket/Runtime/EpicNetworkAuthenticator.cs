@@ -33,7 +33,7 @@ namespace Mirage.Sockets.EpicSocket
             var address = player.Address;
             if (address is EpicEndPoint)
             {
-                player.Send(new AuthMessage());
+                SendAuthentication(_client, new AuthMessage());
             }
         }
 
