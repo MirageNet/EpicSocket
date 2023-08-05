@@ -1,3 +1,10 @@
+# [1.0.0-beta.7](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2023-08-05)
+
+
+### Bug Fixes
+
+* fixing Authenticator for host mode ([7ed9691](https://github.com/MirageNet/EpicSocket/commit/7ed9691e473c22fbebdc6dfba8cfd811e1eb387d))
+
 # [1.0.0-beta.6](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-06-21)
 
 
