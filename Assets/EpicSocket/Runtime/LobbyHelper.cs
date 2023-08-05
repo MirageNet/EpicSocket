@@ -13,12 +13,12 @@ namespace Mirage.Sockets.EpicSocket
     {
         internal static readonly ILogger logger = LogFactory.GetLogger(typeof(LobbyHelper));
         private readonly ProductUserId _localUser;
-        private readonly LobbyInterface _lobby;
+        private readonly LobbyInterface _interface;
 
         public LobbyHelper(ProductUserId localUser, LobbyInterface lobby)
         {
             _localUser = localUser;
-            _lobby = lobby;
+            _interface = lobby;
         }
 
         public UniTask<string> StartLobby(int maxMembers, string bucketId = "Default")
@@ -42,7 +42,7 @@ namespace Mirage.Sockets.EpicSocket
         public async UniTask<string> StartLobby(CreateLobbyOptions options)
         {
             var awaiter = new AsyncWaiter<CreateLobbyCallbackInfo>();
-            _lobby.CreateLobby(ref options, null, awaiter.Callback);
+            _interface.CreateLobby(ref options, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Create Lobby", result.ResultCode);
             if (logger.LogEnabled()) logger.Log($"Lobby Created, ID:{result.LobbyId}");
@@ -60,7 +60,7 @@ namespace Mirage.Sockets.EpicSocket
                 LocalUserId = _localUser
             };
             var awaiter = new AsyncWaiter<LeaveLobbyCallbackInfo>();
-            _lobby.LeaveLobby(ref options, null, awaiter.Callback);
+            _interface.LeaveLobby(ref options, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Create Lobby", result.ResultCode);
         }
@@ -75,7 +75,7 @@ namespace Mirage.Sockets.EpicSocket
                 throw new ArgumentException("collectioon was empty", nameof(modifyData));
 
             var modificationOptions = new UpdateLobbyModificationOptions { LobbyId = lobbyId, LocalUserId = _localUser };
-            _lobby.UpdateLobbyModification(ref modificationOptions, out var modifyHandle);
+            _interface.UpdateLobbyModification(ref modificationOptions, out var modifyHandle);
 
             foreach (var data in modifyData)
             {
@@ -89,7 +89,7 @@ namespace Mirage.Sockets.EpicSocket
 
             var awaiter = new AsyncWaiter<UpdateLobbyCallbackInfo>();
             var updateLobbyOptions = new UpdateLobbyOptions { LobbyModificationHandle = modifyHandle };
-            _lobby.UpdateLobby(ref updateLobbyOptions, null, awaiter.Callback);
+            _interface.UpdateLobby(ref updateLobbyOptions, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Modify Lobby", result.ResultCode);
             if (logger.LogEnabled()) logger.Log($"Lobby Modified, ID:{result.LobbyId}");
@@ -110,7 +110,7 @@ namespace Mirage.Sockets.EpicSocket
         public async UniTask<List<LobbyDetails>> GetAllLobbies(IEnumerable<LobbySearchSetParameterOptions> searchOptions, uint maxResults = 10)
         {
             var createOptions = new CreateLobbySearchOptions { MaxResults = maxResults, };
-            logger.WarnResult("Create Search", _lobby.CreateLobbySearch(ref createOptions, out var searchHandle));
+            logger.WarnResult("Create Search", _interface.CreateLobbySearch(ref createOptions, out var searchHandle));
 
             foreach (var item in searchOptions)
             {
