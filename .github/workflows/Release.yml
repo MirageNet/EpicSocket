@@ -3,35 +3,40 @@ name: Release
 on: 
   push:
     branches:
-     - main
-     - beta
+      - main
+      - beta
   
 jobs:
   Release:
     env:
       SOURCE_PATH: Assets/EpicSocket
-      # target path should be path inside unityPackage, should be inside asset folder
       TARGET_PATH: Assets/EpicSocket
     runs-on: ubuntu-latest
     steps:
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '3.1.100'
-
-      - name: Install unity-packer
-        run: dotnet tool install -g unity-packer
-
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
-    
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Install libssl1.1 (Required for .NET Core 3.1)
+        run: |
+          wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+
+      - name: Install unity-packer
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet tool install -g unity-packer
+
       - name: Release
-        # id so output can be used by other steps
         id: semantic 
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v4
         with:          
           extra_plugins: |
             @semantic-release/exec
