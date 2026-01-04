@@ -24,6 +24,8 @@ namespace Mirage.Sockets.EpicSocket
         private RelayHandle _relayHandle;
         private CommandHandler _commandHandler;
 
+        public override bool IsSupported => true; // TODO check if platform is supported
+
         private void Update()
         {
             if (_relayHandle != null && _relayHandle.CheckOpen())
@@ -191,12 +193,12 @@ namespace Mirage.Sockets.EpicSocket
             return new EpicSocket(_relayHandle);
         }
 
-        public override IEndPoint GetBindEndPoint()
+        public override IBindEndPoint GetBindEndPoint()
         {
             return new EpicEndPoint();
         }
 
-        public override IEndPoint GetConnectEndPoint(string address = null, ushort? port = null)
+        public override IConnectEndPoint GetConnectEndPoint(string address = null, ushort? port = null)
         {
             // need to pass host user to endpoint here, so that peer has the user when it creates copy of endPoint
             return new EpicEndPoint()

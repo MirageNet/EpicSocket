@@ -2,7 +2,7 @@
   "name": "com.miragenet.epicsocket",
   "displayName": "Epic Socket for Mirage",
   "version": "1.0.0-beta.7",
-  "unity": "2019.4",
+  "unity": "2022.3",
   "description": "Epic online servers for Mirage, includes relay, lobbies and other features",
   "author": "Mirage",
   "repository": {
@@ -10,7 +10,7 @@
     "url": "https://github.com/MirageNet/EpicSocket.git"
   },
   "dependencies": {
-    "com.miragenet.mirage": "143.0.0",
+    "com.miragenet.mirage": "156.2.0",
     "com.playeveryware.eos": "2.2.0"
   },
   "samples": []

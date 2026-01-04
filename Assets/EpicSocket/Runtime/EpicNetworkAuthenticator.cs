@@ -20,9 +20,7 @@ namespace Mirage.Sockets.EpicSocket
             }
             else  // remote player
             {
-                var address = player.Address;
-
-                var epicEndPoint = (EpicEndPoint)address;
+                var epicEndPoint = (EpicEndPoint)player.ConnectionHandle;
 
                 var user = epicEndPoint.UserId;
                 return AuthenticationResult.CreateSuccess(this, user);

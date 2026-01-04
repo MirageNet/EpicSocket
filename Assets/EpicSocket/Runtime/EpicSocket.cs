@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Epic.OnlineServices.P2P;
 using Mirage.Logging;
 using Mirage.SocketLayer;
@@ -28,16 +27,17 @@ namespace Mirage.Sockets.EpicSocket
                 throw new InvalidOperationException("Relay not open, can not start socket");
         }
 
-        public void Bind(IEndPoint endPoint)
+        public void Bind(IBindEndPoint endPoint)
         {
             ThrowIfRelayNotActive();
             _receiveEndPoint = (EpicEndPoint)endPoint;
         }
 
-        public void Connect(IEndPoint endPoint)
+        public IConnectionHandle Connect(IConnectEndPoint endPoint)
         {
             ThrowIfRelayNotActive();
             _receiveEndPoint = (EpicEndPoint)endPoint;
+            return _receiveEndPoint;
         }
 
         public void Close()
@@ -79,14 +79,14 @@ namespace Mirage.Sockets.EpicSocket
             return _relayHandle.ReceiveGameData(out _nextPacket);
         }
 
-        public int Receive(byte[] buffer, out IEndPoint endPoint)
+        public int Receive(Span<byte> outBuffer, out IConnectionHandle handle)
         {
             Debug.Assert(_nextPacket.data != null);
 
-            Buffer.BlockCopy(_nextPacket.data.Array, 0, buffer, 0, _nextPacket.data.Count);
+            _nextPacket.data.AsSpan().CopyTo(outBuffer);
 
             _receiveEndPoint.UserId = _nextPacket.userId;
-            endPoint = _receiveEndPoint;
+            handle = _receiveEndPoint;
             var length = _nextPacket.data.Count;
 
             EpicLogger.Verbose($"Receive {length} bytes from {_nextPacket.userId}");
@@ -96,19 +96,23 @@ namespace Mirage.Sockets.EpicSocket
             return length;
         }
 
-        public void Send(IEndPoint iEndPoint, byte[] packet, int length)
+        public void Send(IConnectionHandle handle, ReadOnlySpan<byte> packet)
         {
             if (!IsOpenAndLoaded()) return;
 
-            var endPoint = (EpicEndPoint)iEndPoint;
+            var endPoint = (EpicEndPoint)handle;
 
             // send option has no length field, we have to copy to new array
             // todo avoid allocation
-            var data = packet.Take(length).ToArray();
+            var data = packet.ToArray();
             _relayHandle.SendGameData(endPoint.UserId, data);
 
-            EpicLogger.Verbose($"Send {length} bytes to {endPoint.UserId}");
+            EpicLogger.Verbose($"Send {packet.Length} bytes to {endPoint.UserId}");
         }
+
+        void ISocket.SetTickEvents(int maxPacketSize, OnData onData, OnDisconnect onDisconnect) { }
+        void ISocket.Tick() { }
+        void ISocket.Flush() { }
     }
 }
 

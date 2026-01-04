@@ -4,7 +4,7 @@ using Mirage.SocketLayer;
 
 namespace Mirage.Sockets.EpicSocket
 {
-    internal sealed class EpicEndPoint : IEndPoint
+    internal sealed class EpicEndPoint : IConnectionHandle, IBindEndPoint, IConnectEndPoint
     {
         public ProductUserId UserId;
 
@@ -14,7 +14,7 @@ namespace Mirage.Sockets.EpicSocket
             UserId = userId ?? throw new ArgumentNullException(nameof(userId));
         }
 
-        IEndPoint IEndPoint.CreateCopy()
+        IConnectionHandle IConnectionHandle.CreateCopy()
         {
             return new EpicEndPoint(UserId);
         }
@@ -38,6 +38,11 @@ namespace Mirage.Sockets.EpicSocket
 
             return UserId.GetHashCode();
         }
+
+        bool IConnectionHandle.IsStateful => false;
+        ISocketLayerConnection IConnectionHandle.SocketLayerConnection { get; set; }
+        bool IConnectionHandle.SupportsGracefulDisconnect => false;
+        void IConnectionHandle.Disconnect(string gracefulDisconnectReason) => throw new NotSupportedException();
     }
 }
 
