@@ -1,3 +1,13 @@
+# [1.0.0-beta.8](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2026-01-04)
+
+
+* fix!: updating to Mirage v156 for stateful connections support ([af61b91](https://github.com/MirageNet/EpicSocket/commit/af61b91c94e0dce0d873889b7e004879e1b75525))
+
+
+### BREAKING CHANGES
+
+* increasing minimum mirage version to v156.2.0
+
 # [1.0.0-beta.7](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2023-08-05)
 
 
