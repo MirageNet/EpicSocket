@@ -39,6 +39,11 @@ namespace Mirage.Sockets.EpicSocket
             return UserId.GetHashCode();
         }
 
+        public override string ToString()
+        {
+            return UserId.ToString();
+        }
+
         bool IConnectionHandle.IsStateful => false;
         ISocketLayerConnection IConnectionHandle.SocketLayerConnection { get; set; }
         bool IConnectionHandle.SupportsGracefulDisconnect => false;

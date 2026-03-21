@@ -5,27 +5,23 @@ using Cysharp.Threading.Tasks;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using Mirage.Logging;
+using PlayEveryWare.EpicOnlineServices;
 using UnityEngine;
 
 namespace Mirage.Sockets.EpicSocket
 {
-    public class LobbyHelper
+    public static class LobbyHelper
     {
         internal static readonly ILogger logger = LogFactory.GetLogger(typeof(LobbyHelper));
-        private readonly ProductUserId _localUser;
-        private readonly LobbyInterface _interface;
 
-        public LobbyHelper(ProductUserId localUser, LobbyInterface lobby)
-        {
-            _localUser = localUser;
-            _interface = lobby;
-        }
+        public static ProductUserId LocalUser => EOSManager.Instance.GetProductUserId();
+        public static LobbyInterface LobbyInterface => EOSManager.Instance.GetEOSLobbyInterface();
 
-        public UniTask<string> StartLobby(int maxMembers, string bucketId = "Default")
+        public static UniTask<string> StartLobby(int maxMembers, string bucketId = "Default")
         {
             var options = new CreateLobbyOptions
             {
-                LocalUserId = _localUser,
+                LocalUserId = LocalUser,
                 MaxLobbyMembers = (uint)maxMembers,
                 PermissionLevel = LobbyPermissionLevel.Publicadvertised,
                 PresenceEnabled = true,
@@ -39,10 +35,10 @@ namespace Mirage.Sockets.EpicSocket
         }
 
         /// <returns>Lobby id</returns>
-        public async UniTask<string> StartLobby(CreateLobbyOptions options)
+        public static async UniTask<string> StartLobby(CreateLobbyOptions options)
         {
             var awaiter = new AsyncWaiter<CreateLobbyCallbackInfo>();
-            _interface.CreateLobby(ref options, null, awaiter.Callback);
+            LobbyInterface.CreateLobby(ref options, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Create Lobby", result.ResultCode);
             if (logger.LogEnabled()) logger.Log($"Lobby Created, ID:{result.LobbyId}");
@@ -52,30 +48,78 @@ namespace Mirage.Sockets.EpicSocket
 
             return result.LobbyId;
         }
-        public async UniTask LeaveLobby(string lobbyId)
+
+        /// <summary>
+        /// Called by client to join lobby
+        /// </summary>
+        /// <param name="lobbyId"></param>
+        /// <returns></returns>
+        public static async UniTask JoinLobby(LobbyDetails lobby)
         {
-            var options = new LeaveLobbyOptions
+            var options = new JoinLobbyOptions
             {
-                LobbyId = lobbyId,
-                LocalUserId = _localUser
+                LobbyDetailsHandle = lobby,
+                LocalUserId = LocalUser
             };
-            var awaiter = new AsyncWaiter<LeaveLobbyCallbackInfo>();
-            _interface.LeaveLobby(ref options, null, awaiter.Callback);
+            var awaiter = new AsyncWaiter<JoinLobbyCallbackInfo>();
+            LobbyInterface.JoinLobby(ref options, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Create Lobby", result.ResultCode);
         }
 
-        public UniTask ModifyLobby(string lobbyId, AttributeData modifyData)
+        /// <summary>
+        /// Called by client to leave lobby
+        /// </summary>
+        /// <param name="lobbyId"></param>
+        /// <returns></returns>
+        public static async UniTask LeaveLobby(string lobbyId)
+        {
+            var options = new LeaveLobbyOptions
+            {
+                LobbyId = lobbyId,
+                LocalUserId = LocalUser
+            };
+            var awaiter = new AsyncWaiter<LeaveLobbyCallbackInfo>();
+            LobbyInterface.LeaveLobby(ref options, null, awaiter.Callback);
+            var result = await awaiter.Wait();
+            logger.WarnResult("Create Lobby", result.ResultCode);
+        }
+
+        /// <summary>
+        /// Called by owner to remove lobby
+        /// </summary>
+        /// <param name="lobbyId"></param>
+        /// <returns></returns>
+        public static async UniTask DestroyLobby(string lobbyId)
+        {
+            var options = new DestroyLobbyOptions
+            {
+                LobbyId = lobbyId,
+                LocalUserId = LocalUser
+            };
+            var awaiter = new AsyncWaiter<DestroyLobbyCallbackInfo>();
+            LobbyInterface.DestroyLobby(ref options, null, awaiter.Callback);
+            var result = await awaiter.Wait();
+            logger.WarnResult("Create Lobby", result.ResultCode);
+        }
+
+        public static UniTask ModifyLobby(string lobbyId, AttributeData modifyData)
         {
             return ModifyLobby(lobbyId, new List<AttributeData>() { modifyData });
         }
-        public async UniTask ModifyLobby(string lobbyId, IEnumerable<AttributeData> modifyData)
+        public static async UniTask ModifyLobby(string lobbyId, IEnumerable<AttributeData> modifyData)
         {
             if (modifyData.Count() == 0)
                 throw new ArgumentException("collectioon was empty", nameof(modifyData));
 
-            var modificationOptions = new UpdateLobbyModificationOptions { LobbyId = lobbyId, LocalUserId = _localUser };
-            _interface.UpdateLobbyModification(ref modificationOptions, out var modifyHandle);
+            var modificationOptions = new UpdateLobbyModificationOptions { LobbyId = lobbyId, LocalUserId = LocalUser };
+            var updateResult = LobbyInterface.UpdateLobbyModification(ref modificationOptions, out var modifyHandle);
+
+            if (updateResult != Result.Success)
+            {
+                logger.LogError("Failed to modify lobby. See EOS error message");
+                return;
+            }
 
             foreach (var data in modifyData)
             {
@@ -89,28 +133,20 @@ namespace Mirage.Sockets.EpicSocket
 
             var awaiter = new AsyncWaiter<UpdateLobbyCallbackInfo>();
             var updateLobbyOptions = new UpdateLobbyOptions { LobbyModificationHandle = modifyHandle };
-            _interface.UpdateLobby(ref updateLobbyOptions, null, awaiter.Callback);
+            LobbyInterface.UpdateLobby(ref updateLobbyOptions, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Modify Lobby", result.ResultCode);
             if (logger.LogEnabled()) logger.Log($"Lobby Modified, ID:{result.LobbyId}");
         }
 
-        public static AttributeData CreateData(string key, string value)
-        {
-            var data = new AttributeData();
-            data.Key = key;
-            data.Value = value;
-            return data;
-        }
-
-        public UniTask<List<LobbyDetails>> GetAllLobbies(LobbySearchSetParameterOptions searchOption, uint maxResults = 10)
+        public static UniTask<List<LobbyDetails>> GetAllLobbies(LobbySearchSetParameterOptions searchOption, uint maxResults = 10)
         {
             return GetAllLobbies(new List<LobbySearchSetParameterOptions>() { searchOption }, maxResults);
         }
-        public async UniTask<List<LobbyDetails>> GetAllLobbies(IEnumerable<LobbySearchSetParameterOptions> searchOptions, uint maxResults = 10)
+        public static async UniTask<List<LobbyDetails>> GetAllLobbies(IEnumerable<LobbySearchSetParameterOptions> searchOptions, uint maxResults = 10)
         {
             var createOptions = new CreateLobbySearchOptions { MaxResults = maxResults, };
-            logger.WarnResult("Create Search", _interface.CreateLobbySearch(ref createOptions, out var searchHandle));
+            logger.WarnResult("Create Search", LobbyInterface.CreateLobbySearch(ref createOptions, out var searchHandle));
 
             foreach (var item in searchOptions)
             {
@@ -119,7 +155,7 @@ namespace Mirage.Sockets.EpicSocket
             }
 
             var awaiter = new AsyncWaiter<LobbySearchFindCallbackInfo>();
-            var findOption = new LobbySearchFindOptions { LocalUserId = _localUser, };
+            var findOption = new LobbySearchFindOptions { LocalUserId = LocalUser, };
             searchHandle.Find(ref findOption, null, awaiter.Callback);
             var result = await awaiter.Wait();
             logger.WarnResult("Search Find", result.ResultCode);
