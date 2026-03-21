@@ -1,3 +1,10 @@
+# [1.0.0-beta.9](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2026-03-21)
+
+
+### Features
+
+* improving LobbyHelper to make it static and use EOS singleton directly ([3a83d27](https://github.com/MirageNet/EpicSocket/commit/3a83d27d5f4d798f39937ff35044dde9d9abaff3))
+
 # [1.0.0-beta.8](https://github.com/MirageNet/EpicSocket/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2026-01-04)
 
 
